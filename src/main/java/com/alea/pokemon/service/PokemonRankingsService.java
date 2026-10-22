@@ -1,8 +1,6 @@
-package com.alea.pokemon.application.service;
+package com.alea.pokemon.service;
 
 import com.alea.pokemon.exception.RankingsNotReadyException;
-import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
-import com.alea.pokemon.application.port.in.LoadPokemonRankingsUseCase;
 import com.alea.pokemon.cache.RankingsCache;
 import com.alea.pokemon.client.ApiClientExecutor;
 import com.alea.pokemon.model.Pokemon;
@@ -14,14 +12,17 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Slf4j
+/**
+ * The use case of the application: build the rankings once (from PokéAPI) and then serve them.
+ * Every "get" method throws RankingsNotReadyException while the rankings are not loaded yet.
+ */
 @Service
 @RequiredArgsConstructor
-public class PokemonRankingsService implements LoadPokemonRankingsUseCase, GetPokemonRankingsUseCase {
+public class PokemonRankingsService {
 
     private final ApiClientExecutor apiClientExecutor;
     private final RankingsCache rankingsCache;
 
-    @Override
     public void load() {
         log.info("Loading Pokémon to build the rankings...");
         List<Pokemon> allPokemon = apiClientExecutor.fetchAllPokemon();
@@ -35,22 +36,18 @@ public class PokemonRankingsService implements LoadPokemonRankingsUseCase, GetPo
         log.info("Rankings are ready, built from {} Pokémon", allPokemon.size());
     }
 
-    @Override
     public List<Pokemon> heaviest() {
         return currentRankings().heaviest();
     }
 
-    @Override
     public List<Pokemon> highest() {
         return currentRankings().highest();
     }
 
-    @Override
     public List<Pokemon> mostBaseExperience() {
         return currentRankings().mostBaseExperience();
     }
 
-    @Override
     public boolean isReady() {
         return rankingsCache.find().isPresent();
     }

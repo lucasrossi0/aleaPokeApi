@@ -1,7 +1,7 @@
 package com.alea.pokemon.adapter.in.startup;
 
 import com.alea.pokemon.exception.PokemonSourceException;
-import com.alea.pokemon.application.port.in.LoadPokemonRankingsUseCase;
+import com.alea.pokemon.service.PokemonRankingsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 class RankingsStartupTriggerTest {
 
     @Mock
-    private LoadPokemonRankingsUseCase loadRankings;
+    private PokemonRankingsService rankingsService;
 
     @InjectMocks
     private RankingsStartupTrigger trigger;
@@ -27,14 +27,14 @@ class RankingsStartupTriggerTest {
         trigger.onApplicationReady();
 
         // the load runs in another thread, so we wait up to 2 seconds for it
-        verify(loadRankings, timeout(2000)).load();
+        verify(rankingsService, timeout(2000)).load();
     }
 
     @Test
     void loadSafely_whenLoadingFails_doesNotThrow() {
-        doThrow(new PokemonSourceException("PokéAPI is down", null)).when(loadRankings).load();
+        doThrow(new PokemonSourceException("PokéAPI is down", null)).when(rankingsService).load();
 
         assertThatCode(() -> trigger.loadSafely()).doesNotThrowAnyException();
-        verify(loadRankings).load();
+        verify(rankingsService).load();
     }
 }

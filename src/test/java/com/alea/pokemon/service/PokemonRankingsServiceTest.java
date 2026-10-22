@@ -1,4 +1,4 @@
-package com.alea.pokemon.application.service;
+package com.alea.pokemon.service;
 
 import com.alea.pokemon.exception.PokemonSourceException;
 import com.alea.pokemon.exception.RankingsNotReadyException;

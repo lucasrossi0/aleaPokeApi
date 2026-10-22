@@ -1,7 +1,7 @@
 package com.alea.pokemon.adapter.in.web;
 
 import com.alea.pokemon.exception.RankingsNotReadyException;
-import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
+import com.alea.pokemon.service.PokemonRankingsService;
 import com.alea.pokemon.model.Pokemon;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ class PokemonControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private GetPokemonRankingsUseCase getRankings;
+    private PokemonRankingsService rankingsService;
 
     private final Pokemon snorlax = Pokemon.builder()
             .id(143).name("snorlax").weight(4600).height(21).baseExperience(189).build();
@@ -32,7 +32,7 @@ class PokemonControllerTest {
 
     @Test
     void heaviest_returnsTheListAsJson() throws Exception {
-        when(getRankings.heaviest()).thenReturn(List.of(snorlax, pikachu));
+        when(rankingsService.heaviest()).thenReturn(List.of(snorlax, pikachu));
 
         mockMvc.perform(get("/api/pokemon/heaviest"))
                 .andExpect(status().isOk())
@@ -47,7 +47,7 @@ class PokemonControllerTest {
 
     @Test
     void highest_returnsTheListAsJson() throws Exception {
-        when(getRankings.highest()).thenReturn(List.of(snorlax));
+        when(rankingsService.highest()).thenReturn(List.of(snorlax));
 
         mockMvc.perform(get("/api/pokemon/highest"))
                 .andExpect(status().isOk())
@@ -56,7 +56,7 @@ class PokemonControllerTest {
 
     @Test
     void baseExperience_returnsTheListAsJson() throws Exception {
-        when(getRankings.mostBaseExperience()).thenReturn(List.of(pikachu));
+        when(rankingsService.mostBaseExperience()).thenReturn(List.of(pikachu));
 
         mockMvc.perform(get("/api/pokemon/base-experience"))
                 .andExpect(status().isOk())
@@ -65,9 +65,9 @@ class PokemonControllerTest {
 
     @Test
     void whenRankingsAreNotReady_answers503() throws Exception {
-        when(getRankings.heaviest()).thenThrow(new RankingsNotReadyException());
-        when(getRankings.highest()).thenThrow(new RankingsNotReadyException());
-        when(getRankings.mostBaseExperience()).thenThrow(new RankingsNotReadyException());
+        when(rankingsService.heaviest()).thenThrow(new RankingsNotReadyException());
+        when(rankingsService.highest()).thenThrow(new RankingsNotReadyException());
+        when(rankingsService.mostBaseExperience()).thenThrow(new RankingsNotReadyException());
 
         for (String path : List.of("heaviest", "highest", "base-experience")) {
             mockMvc.perform(get("/api/pokemon/" + path))
@@ -80,7 +80,7 @@ class PokemonControllerTest {
 
     @Test
     void whenSomethingUnexpectedHappens_answers500WithoutDetails() throws Exception {
-        when(getRankings.heaviest()).thenThrow(new IllegalStateException("secret internal detail"));
+        when(rankingsService.heaviest()).thenThrow(new IllegalStateException("secret internal detail"));
 
         mockMvc.perform(get("/api/pokemon/heaviest"))
                 .andExpect(status().isInternalServerError())

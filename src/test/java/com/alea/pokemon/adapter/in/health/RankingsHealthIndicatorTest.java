@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.in.health;
 
-import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
+import com.alea.pokemon.service.PokemonRankingsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,21 +16,21 @@ import static org.mockito.Mockito.when;
 class RankingsHealthIndicatorTest {
 
     @Mock
-    private GetPokemonRankingsUseCase getRankings;
+    private PokemonRankingsService rankingsService;
 
     @InjectMocks
     private RankingsHealthIndicator indicator;
 
     @Test
     void health_whenRankingsAreLoaded_isUp() {
-        when(getRankings.isReady()).thenReturn(true);
+        when(rankingsService.isReady()).thenReturn(true);
 
         assertThat(indicator.health().getStatus()).isEqualTo(Status.UP);
     }
 
     @Test
     void health_whenRankingsAreStillLoading_isOutOfService() {
-        when(getRankings.isReady()).thenReturn(false);
+        when(rankingsService.isReady()).thenReturn(false);
 
         Health health = indicator.health();
 

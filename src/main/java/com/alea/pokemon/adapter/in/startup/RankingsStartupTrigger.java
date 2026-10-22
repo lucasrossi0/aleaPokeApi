@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.in.startup;
 
-import com.alea.pokemon.application.port.in.LoadPokemonRankingsUseCase;
+import com.alea.pokemon.service.PokemonRankingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RankingsStartupTrigger {
 
-    private final LoadPokemonRankingsUseCase loadRankings;
+    private final PokemonRankingsService rankingsService;
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
@@ -27,7 +27,7 @@ public class RankingsStartupTrigger {
     // If loading fails we only log it: the application keeps running and the endpoints keep answering 503.
     void loadSafely() {
         try {
-            loadRankings.load();
+            rankingsService.load();
         } catch (RuntimeException e) {
             log.error("The rankings could not be loaded", e);
         }

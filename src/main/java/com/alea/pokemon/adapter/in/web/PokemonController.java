@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.in.web;
 
-import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
+import com.alea.pokemon.service.PokemonRankingsService;
 import com.alea.pokemon.model.Pokemon;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,21 +14,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PokemonController {
 
-    private final GetPokemonRankingsUseCase getRankings;
+    private final PokemonRankingsService rankingsService;
 
     @GetMapping("/heaviest")
     public List<PokemonResponse> heaviest() {
-        return toResponses(getRankings.heaviest());
+        return toResponses(rankingsService.heaviest());
     }
 
     @GetMapping("/highest")
     public List<PokemonResponse> highest() {
-        return toResponses(getRankings.highest());
+        return toResponses(rankingsService.highest());
     }
 
     @GetMapping("/base-experience")
     public List<PokemonResponse> mostBaseExperience() {
-        return toResponses(getRankings.mostBaseExperience());
+        return toResponses(rankingsService.mostBaseExperience());
     }
 
     private List<PokemonResponse> toResponses(List<Pokemon> pokemon) {

@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.in.health;
 
-import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
+import com.alea.pokemon.service.PokemonRankingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
@@ -15,11 +15,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RankingsHealthIndicator implements HealthIndicator {
 
-    private final GetPokemonRankingsUseCase getRankings;
+    private final PokemonRankingsService rankingsService;
 
     @Override
     public Health health() {
-        if (getRankings.isReady()) {
+        if (rankingsService.isReady()) {
             return Health.up().build();
         }
         return Health.outOfService().withDetail("reason", "Rankings are still loading").build();
