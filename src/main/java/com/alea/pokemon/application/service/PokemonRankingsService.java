@@ -1,12 +1,12 @@
 package com.alea.pokemon.application.service;
 
-import com.alea.pokemon.application.exception.RankingsNotReadyException;
+import com.alea.pokemon.exception.RankingsNotReadyException;
 import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
 import com.alea.pokemon.application.port.in.LoadPokemonRankingsUseCase;
 import com.alea.pokemon.application.port.out.PokemonSourcePort;
 import com.alea.pokemon.application.port.out.RankingsStorePort;
-import com.alea.pokemon.domain.Pokemon;
-import com.alea.pokemon.domain.PokemonRankings;
+import com.alea.pokemon.model.Pokemon;
+import com.alea.pokemon.model.PokemonRankings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

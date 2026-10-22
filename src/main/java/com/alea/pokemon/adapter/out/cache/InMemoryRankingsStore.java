@@ -1,7 +1,7 @@
 package com.alea.pokemon.adapter.out.cache;
 
 import com.alea.pokemon.application.port.out.RankingsStorePort;
-import com.alea.pokemon.domain.PokemonRankings;
+import com.alea.pokemon.model.PokemonRankings;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.out.pokeapi.dto;
 
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

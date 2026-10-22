@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.out.pokeapi;
 
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

@@ -3,7 +3,7 @@ package com.alea.pokemon.adapter.out.pokeapi;
 import com.alea.pokemon.adapter.out.pokeapi.dto.PokemonDetailResponse;
 import com.alea.pokemon.adapter.out.pokeapi.dto.PokemonListItem;
 import com.alea.pokemon.adapter.out.pokeapi.dto.PokemonListResponse;
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 

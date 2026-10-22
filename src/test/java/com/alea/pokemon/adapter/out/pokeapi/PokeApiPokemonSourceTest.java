@@ -1,7 +1,7 @@
 package com.alea.pokemon.adapter.out.pokeapi;
 
-import com.alea.pokemon.application.exception.PokemonSourceException;
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.exception.PokemonSourceException;
+import com.alea.pokemon.model.Pokemon;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

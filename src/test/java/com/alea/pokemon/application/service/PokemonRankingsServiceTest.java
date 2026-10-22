@@ -1,11 +1,11 @@
 package com.alea.pokemon.application.service;
 
-import com.alea.pokemon.application.exception.PokemonSourceException;
-import com.alea.pokemon.application.exception.RankingsNotReadyException;
+import com.alea.pokemon.exception.PokemonSourceException;
+import com.alea.pokemon.exception.RankingsNotReadyException;
 import com.alea.pokemon.application.port.out.PokemonSourcePort;
 import com.alea.pokemon.application.port.out.RankingsStorePort;
-import com.alea.pokemon.domain.Pokemon;
-import com.alea.pokemon.domain.PokemonRankings;
+import com.alea.pokemon.model.Pokemon;
+import com.alea.pokemon.model.PokemonRankings;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

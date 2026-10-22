@@ -1,6 +1,6 @@
 package com.alea.pokemon.application.port.in;
 
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 
 import java.util.List;
 

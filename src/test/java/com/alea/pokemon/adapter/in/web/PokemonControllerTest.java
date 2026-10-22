@@ -1,8 +1,8 @@
 package com.alea.pokemon.adapter.in.web;
 
-import com.alea.pokemon.application.exception.RankingsNotReadyException;
+import com.alea.pokemon.exception.RankingsNotReadyException;
 import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

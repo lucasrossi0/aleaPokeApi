@@ -1,4 +1,4 @@
-package com.alea.pokemon.application.exception;
+package com.alea.pokemon.exception;
 
 /**
  * Someone asked for the rankings before they were loaded.

@@ -1,7 +1,7 @@
 package com.alea.pokemon.adapter.in.web;
 
 import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

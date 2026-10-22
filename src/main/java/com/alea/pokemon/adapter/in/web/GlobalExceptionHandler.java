@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.in.web;
 
-import com.alea.pokemon.application.exception.RankingsNotReadyException;
+import com.alea.pokemon.exception.RankingsNotReadyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;

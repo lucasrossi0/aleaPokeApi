@@ -1,4 +1,4 @@
-package com.alea.pokemon.application.exception;
+package com.alea.pokemon.exception;
 
 /**
  * The place we get Pokémon from could not be used.

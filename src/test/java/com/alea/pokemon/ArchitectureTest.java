@@ -22,7 +22,7 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule layersOnlyPointInward = layeredArchitecture()
             .consideringOnlyDependenciesInLayers()
-            .layer("Domain").definedBy("com.alea.pokemon.domain..")
+            .layer("Domain").definedBy("com.alea.pokemon.model..")
             .layer("Application").definedBy("com.alea.pokemon.application..")
             .layer("Adapter").definedBy("com.alea.pokemon.adapter..")
             .whereLayer("Adapter").mayNotBeAccessedByAnyLayer()
@@ -32,14 +32,14 @@ class ArchitectureTest {
     // "lombok.." is allowed because Lombok only marks the code it generates; it is not a runtime dependency.
     @ArchTest
     static final ArchRule domainIsPlainJava = classes()
-            .that().resideInAPackage("..domain..")
-            .should().onlyDependOnClassesThat().resideInAnyPackage("..domain..", "java..", "lombok..");
+            .that().resideInAPackage("..model..")
+            .should().onlyDependOnClassesThat().resideInAnyPackage("..model..", "java..", "lombok..");
 
     @ArchTest
     static final ArchRule applicationOnlyKnowsTheDomain = classes()
             .that().resideInAPackage("..application..")
             .should().onlyDependOnClassesThat().resideInAnyPackage(
-                    "..application..", "..domain..", "java..", "lombok..", "org.slf4j..", "org.springframework.stereotype..");
+                    "..application..", "..model..", "..exception..", "java..", "lombok..", "org.slf4j..", "org.springframework.stereotype..");
 
     @ArchTest
     static final ArchRule onlyThePokeApiAdapterKnowsPokeApi = noClasses()

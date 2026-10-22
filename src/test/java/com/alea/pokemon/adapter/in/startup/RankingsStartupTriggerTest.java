@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.in.startup;
 
-import com.alea.pokemon.application.exception.PokemonSourceException;
+import com.alea.pokemon.exception.PokemonSourceException;
 import com.alea.pokemon.application.port.in.LoadPokemonRankingsUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

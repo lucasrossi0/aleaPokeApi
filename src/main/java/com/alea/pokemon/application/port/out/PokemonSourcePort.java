@@ -1,6 +1,6 @@
 package com.alea.pokemon.application.port.out;
 
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
 public interface PokemonSourcePort {
 
     /**
-     * @throws com.alea.pokemon.application.exception.PokemonSourceException if the source cannot be used at all
+     * @throws com.alea.pokemon.exception.PokemonSourceException if the source cannot be used at all
      */
     List<Pokemon> fetchAllPokemon();
 }

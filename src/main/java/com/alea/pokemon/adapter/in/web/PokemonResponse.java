@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.in.web;
 
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 
 /**
  * The JSON we send to the caller. It is separate from the domain Pokemon,

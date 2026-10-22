@@ -1,8 +1,8 @@
 package com.alea.pokemon.adapter.out.pokeapi;
 
-import com.alea.pokemon.application.exception.PokemonSourceException;
+import com.alea.pokemon.exception.PokemonSourceException;
 import com.alea.pokemon.application.port.out.PokemonSourcePort;
-import com.alea.pokemon.domain.Pokemon;
+import com.alea.pokemon.model.Pokemon;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

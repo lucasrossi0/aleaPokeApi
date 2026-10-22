@@ -1,4 +1,4 @@
-package com.alea.pokemon.domain;
+package com.alea.pokemon.model;
 
 import lombok.Builder;
 import lombok.Value;

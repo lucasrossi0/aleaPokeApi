@@ -1,6 +1,6 @@
 package com.alea.pokemon.application.port.out;
 
-import com.alea.pokemon.domain.PokemonRankings;
+import com.alea.pokemon.model.PokemonRankings;
 
 import java.util.Optional;
 

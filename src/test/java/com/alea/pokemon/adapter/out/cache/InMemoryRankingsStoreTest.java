@@ -1,6 +1,6 @@
 package com.alea.pokemon.adapter.out.cache;
 
-import com.alea.pokemon.domain.PokemonRankings;
+import com.alea.pokemon.model.PokemonRankings;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
