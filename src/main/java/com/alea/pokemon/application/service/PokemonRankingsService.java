@@ -4,7 +4,7 @@ import com.alea.pokemon.exception.RankingsNotReadyException;
 import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
 import com.alea.pokemon.application.port.in.LoadPokemonRankingsUseCase;
 import com.alea.pokemon.application.port.out.PokemonSourcePort;
-import com.alea.pokemon.application.port.out.RankingsStorePort;
+import com.alea.pokemon.cache.RankingsCache;
 import com.alea.pokemon.model.Pokemon;
 import com.alea.pokemon.model.PokemonRankings;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.List;
 public class PokemonRankingsService implements LoadPokemonRankingsUseCase, GetPokemonRankingsUseCase {
 
     private final PokemonSourcePort pokemonSource;
-    private final RankingsStorePort rankingsStore;
+    private final RankingsCache rankingsCache;
 
     @Override
     public void load() {
@@ -31,7 +31,7 @@ public class PokemonRankingsService implements LoadPokemonRankingsUseCase, GetPo
             return;
         }
 
-        rankingsStore.save(PokemonRankings.from(allPokemon));
+        rankingsCache.save(PokemonRankings.from(allPokemon));
         log.info("Rankings are ready, built from {} Pokémon", allPokemon.size());
     }
 
@@ -52,10 +52,10 @@ public class PokemonRankingsService implements LoadPokemonRankingsUseCase, GetPo
 
     @Override
     public boolean isReady() {
-        return rankingsStore.find().isPresent();
+        return rankingsCache.find().isPresent();
     }
 
     private PokemonRankings currentRankings() {
-        return rankingsStore.find().orElseThrow(RankingsNotReadyException::new);
+        return rankingsCache.find().orElseThrow(RankingsNotReadyException::new);
     }
 }

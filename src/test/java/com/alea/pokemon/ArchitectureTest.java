@@ -39,7 +39,7 @@ class ArchitectureTest {
     static final ArchRule applicationOnlyKnowsTheDomain = classes()
             .that().resideInAPackage("..application..")
             .should().onlyDependOnClassesThat().resideInAnyPackage(
-                    "..application..", "..model..", "..exception..", "java..", "lombok..", "org.slf4j..", "org.springframework.stereotype..");
+                    "..application..", "..model..", "..exception..", "..cache..", "java..", "lombok..", "org.slf4j..", "org.springframework.stereotype..");
 
     @ArchTest
     static final ArchRule onlyThePokeApiAdapterKnowsPokeApi = noClasses()

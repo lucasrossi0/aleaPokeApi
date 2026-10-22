@@ -3,7 +3,7 @@ package com.alea.pokemon.application.service;
 import com.alea.pokemon.exception.PokemonSourceException;
 import com.alea.pokemon.exception.RankingsNotReadyException;
 import com.alea.pokemon.application.port.out.PokemonSourcePort;
-import com.alea.pokemon.application.port.out.RankingsStorePort;
+import com.alea.pokemon.cache.RankingsCache;
 import com.alea.pokemon.model.Pokemon;
 import com.alea.pokemon.model.PokemonRankings;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class PokemonRankingsServiceTest {
     private PokemonSourcePort pokemonSource;
 
     @Mock
-    private RankingsStorePort rankingsStore;
+    private RankingsCache rankingsCache;
 
     @InjectMocks
     private PokemonRankingsService service;
@@ -45,7 +45,7 @@ class PokemonRankingsServiceTest {
         service.load();
 
         ArgumentCaptor<PokemonRankings> saved = ArgumentCaptor.forClass(PokemonRankings.class);
-        verify(rankingsStore).save(saved.capture());
+        verify(rankingsCache).save(saved.capture());
         assertThat(saved.getValue().heaviest()).containsExactly(snorlax, pikachu);
     }
 
@@ -55,7 +55,7 @@ class PokemonRankingsServiceTest {
 
         service.load();
 
-        verify(rankingsStore, never()).save(any());
+        verify(rankingsCache, never()).save(any());
     }
 
     @Test
@@ -63,13 +63,13 @@ class PokemonRankingsServiceTest {
         when(pokemonSource.fetchAllPokemon()).thenThrow(new PokemonSourceException("boom", null));
 
         assertThatThrownBy(() -> service.load()).isInstanceOf(PokemonSourceException.class);
-        verify(rankingsStore, never()).save(any());
+        verify(rankingsCache, never()).save(any());
     }
 
     @Test
     void getters_returnTheStoredLists() {
         PokemonRankings rankings = new PokemonRankings(List.of(snorlax), List.of(pikachu), List.of(snorlax, pikachu));
-        when(rankingsStore.find()).thenReturn(Optional.of(rankings));
+        when(rankingsCache.find()).thenReturn(Optional.of(rankings));
 
         assertThat(service.heaviest()).containsExactly(snorlax);
         assertThat(service.highest()).containsExactly(pikachu);
@@ -78,7 +78,7 @@ class PokemonRankingsServiceTest {
 
     @Test
     void getters_beforeLoading_throwNotReady() {
-        when(rankingsStore.find()).thenReturn(Optional.empty());
+        when(rankingsCache.find()).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.heaviest()).isInstanceOf(RankingsNotReadyException.class);
         assertThatThrownBy(() -> service.highest()).isInstanceOf(RankingsNotReadyException.class);
@@ -87,7 +87,7 @@ class PokemonRankingsServiceTest {
 
     @Test
     void isReady_isTrueOnlyWhenRankingsAreStored() {
-        when(rankingsStore.find())
+        when(rankingsCache.find())
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(new PokemonRankings(List.of(), List.of(), List.of())));
 

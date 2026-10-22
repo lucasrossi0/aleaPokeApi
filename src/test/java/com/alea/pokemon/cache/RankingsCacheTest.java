@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.out.cache;
+package com.alea.pokemon.cache;
 
 import com.alea.pokemon.model.PokemonRankings;
 import org.junit.jupiter.api.Test;
@@ -7,22 +7,22 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class InMemoryRankingsStoreTest {
+class RankingsCacheTest {
 
-    private final InMemoryRankingsStore store = new InMemoryRankingsStore();
+    private final RankingsCache cache = new RankingsCache();
 
     @Test
     void find_beforeSaving_isEmpty() {
-        assertThat(store.find()).isEmpty();
+        assertThat(cache.find()).isEmpty();
     }
 
     @Test
     void find_afterSaving_returnsWhatWasSaved() {
         PokemonRankings rankings = new PokemonRankings(List.of(), List.of(), List.of());
 
-        store.save(rankings);
+        cache.save(rankings);
 
-        assertThat(store.find()).containsSame(rankings);
+        assertThat(cache.find()).containsSame(rankings);
     }
 
     @Test
@@ -30,9 +30,9 @@ class InMemoryRankingsStoreTest {
         PokemonRankings first = new PokemonRankings(List.of(), List.of(), List.of());
         PokemonRankings second = new PokemonRankings(List.of(), List.of(), List.of());
 
-        store.save(first);
-        store.save(second);
+        cache.save(first);
+        cache.save(second);
 
-        assertThat(store.find()).containsSame(second);
+        assertThat(cache.find()).containsSame(second);
     }
 }
