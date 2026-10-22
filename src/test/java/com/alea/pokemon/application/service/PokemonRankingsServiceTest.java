@@ -2,8 +2,8 @@ package com.alea.pokemon.application.service;
 
 import com.alea.pokemon.exception.PokemonSourceException;
 import com.alea.pokemon.exception.RankingsNotReadyException;
-import com.alea.pokemon.application.port.out.PokemonSourcePort;
 import com.alea.pokemon.cache.RankingsCache;
+import com.alea.pokemon.client.ApiClientExecutor;
 import com.alea.pokemon.model.Pokemon;
 import com.alea.pokemon.model.PokemonRankings;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 class PokemonRankingsServiceTest {
 
     @Mock
-    private PokemonSourcePort pokemonSource;
+    private ApiClientExecutor apiClientExecutor;
 
     @Mock
     private RankingsCache rankingsCache;
@@ -40,7 +40,7 @@ class PokemonRankingsServiceTest {
 
     @Test
     void load_buildsRankingsFromTheSourceAndSavesThem() {
-        when(pokemonSource.fetchAllPokemon()).thenReturn(List.of(snorlax, pikachu));
+        when(apiClientExecutor.fetchAllPokemon()).thenReturn(List.of(snorlax, pikachu));
 
         service.load();
 
@@ -51,7 +51,7 @@ class PokemonRankingsServiceTest {
 
     @Test
     void load_withNoPokemon_savesNothing() {
-        when(pokemonSource.fetchAllPokemon()).thenReturn(List.of());
+        when(apiClientExecutor.fetchAllPokemon()).thenReturn(List.of());
 
         service.load();
 
@@ -60,7 +60,7 @@ class PokemonRankingsServiceTest {
 
     @Test
     void load_whenSourceFails_theExceptionGoesUp() {
-        when(pokemonSource.fetchAllPokemon()).thenThrow(new PokemonSourceException("boom", null));
+        when(apiClientExecutor.fetchAllPokemon()).thenThrow(new PokemonSourceException("boom", null));
 
         assertThatThrownBy(() -> service.load()).isInstanceOf(PokemonSourceException.class);
         verify(rankingsCache, never()).save(any());

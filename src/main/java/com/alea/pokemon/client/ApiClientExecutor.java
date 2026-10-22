@@ -1,5 +1,6 @@
-package com.alea.pokemon.adapter.out.pokeapi;
+package com.alea.pokemon.client;
 
+import com.alea.pokemon.exception.PokemonSourceException;
 import com.alea.pokemon.model.Pokemon;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 /**
- * Calls PokéAPI for many Pokémon at the same time, so we don't wait for ~1350 calls one by one.
+ * Gets every Pokémon from PokéAPI: first the list of all of them, then the details of each one,
+ * calling PokéAPI for many Pokémon at the same time so we don't wait for ~1350 calls one by one.
+ * This is the only door between PokéAPI and the rest of the application: what comes out are our own Pokémon.
  * <p>
  * - Every Pokémon gets its own virtual thread (cheap threads, perfect for waiting on the network).
  * - A Semaphore limits how many calls run at once, to be kind to PokéAPI.
@@ -30,8 +33,21 @@ public class ApiClientExecutor {
 
     /**
      * @return the Pokémon that could be loaded (the ones that kept failing are left out)
+     * @throws PokemonSourceException if the list of Pokémon itself cannot be obtained
      */
-    public List<Pokemon> fetchAll(List<String> urls) {
+    public List<Pokemon> fetchAllPokemon() {
+        return fetchAll(listUrls());
+    }
+
+    private List<String> listUrls() {
+        try {
+            return pokeApiClient.listPokemonUrls();
+        } catch (RuntimeException e) {
+            throw new PokemonSourceException("Could not get the list of Pokémon from PokéAPI", e);
+        }
+    }
+
+    private List<Pokemon> fetchAll(List<String> urls) {
         Semaphore allowedCalls = new Semaphore(properties.maxConcurrentCalls());
 
         // The executor is closed at the end of the try block, which waits for every task to finish.

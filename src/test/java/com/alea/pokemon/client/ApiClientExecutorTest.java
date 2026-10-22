@@ -1,5 +1,6 @@
-package com.alea.pokemon.adapter.out.pokeapi;
+package com.alea.pokemon.client;
 
+import com.alea.pokemon.exception.PokemonSourceException;
 import com.alea.pokemon.model.Pokemon;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,8 +13,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,14 +32,14 @@ class ApiClientExecutorTest {
         when(pokeApiClient.fetchPokemon("url-1")).thenReturn(pokemon("one"));
         when(pokeApiClient.fetchPokemon("url-2")).thenReturn(pokemon("two"));
 
-        List<Pokemon> result = executor(3, 10).fetchAll(List.of("url-1", "url-2"));
+        List<Pokemon> result = fetchAll(executor(3, 10), List.of("url-1", "url-2"));
 
         assertThat(result).extracting(Pokemon::getName).containsExactlyInAnyOrder("one", "two");
     }
 
     @Test
     void fetchAll_withNoUrls_returnsEmptyList() {
-        assertThat(executor(3, 10).fetchAll(List.of())).isEmpty();
+        assertThat(fetchAll(executor(3, 10), List.of())).isEmpty();
     }
 
     @Test
@@ -46,7 +49,7 @@ class ApiClientExecutorTest {
                 .thenThrow(new RuntimeException("second attempt fails"))
                 .thenReturn(pokemon("one"));
 
-        List<Pokemon> result = executor(3, 10).fetchAll(List.of("url-1"));
+        List<Pokemon> result = fetchAll(executor(3, 10), List.of("url-1"));
 
         assertThat(result).extracting(Pokemon::getName).containsExactly("one");
         verify(pokeApiClient, times(3)).fetchPokemon("url-1");
@@ -57,7 +60,7 @@ class ApiClientExecutorTest {
         when(pokeApiClient.fetchPokemon("bad-url")).thenThrow(new RuntimeException("always fails"));
         when(pokeApiClient.fetchPokemon("good-url")).thenReturn(pokemon("good"));
 
-        List<Pokemon> result = executor(3, 10).fetchAll(List.of("bad-url", "good-url"));
+        List<Pokemon> result = fetchAll(executor(3, 10), List.of("bad-url", "good-url"));
 
         assertThat(result).extracting(Pokemon::getName).containsExactly("good");
         verify(pokeApiClient, times(3)).fetchPokemon("bad-url");
@@ -78,7 +81,7 @@ class ApiClientExecutorTest {
         });
         List<String> urls = IntStream.range(0, 30).mapToObj(i -> "url-" + i).toList();
 
-        List<Pokemon> result = executor(1, maxConcurrentCalls).fetchAll(urls);
+        List<Pokemon> result = fetchAll(executor(1, maxConcurrentCalls), urls);
 
         assertThat(result).hasSize(30);
         assertThat(mostAtOnce.get()).isBetween(1, maxConcurrentCalls);
@@ -94,12 +97,28 @@ class ApiClientExecutorTest {
         });
 
         Thread.currentThread().interrupt();
-        List<Pokemon> result = executor(2, 10).fetchAll(List.of("url-1"));
+        List<Pokemon> result = fetchAll(executor(2, 10), List.of("url-1"));
         // clear the interrupted flag so it does not affect other tests
         boolean wasInterrupted = Thread.interrupted();
 
         assertThat(result).isEmpty();
         assertThat(wasInterrupted).isTrue();
+    }
+
+    @Test
+    void fetchAllPokemon_whenTheListCallFails_throwsPokemonSourceException() {
+        when(pokeApiClient.listPokemonUrls()).thenThrow(new RuntimeException("PokéAPI is down"));
+
+        assertThatThrownBy(() -> executor(3, 10).fetchAllPokemon())
+                .isInstanceOf(PokemonSourceException.class)
+                .hasCauseInstanceOf(RuntimeException.class);
+        verify(pokeApiClient, never()).fetchPokemon(anyString());
+    }
+
+    // Gives the executor this list of addresses (as if PokéAPI had listed them) and fetches them all.
+    private List<Pokemon> fetchAll(ApiClientExecutor executor, List<String> urls) {
+        when(pokeApiClient.listPokemonUrls()).thenReturn(urls);
+        return executor.fetchAllPokemon();
     }
 
     private ApiClientExecutor executor(int maxAttempts, int maxConcurrentCalls) {

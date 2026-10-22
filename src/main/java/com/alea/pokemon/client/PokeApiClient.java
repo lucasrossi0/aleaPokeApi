@@ -1,8 +1,8 @@
-package com.alea.pokemon.adapter.out.pokeapi;
+package com.alea.pokemon.client;
 
-import com.alea.pokemon.adapter.out.pokeapi.dto.PokemonDetailResponse;
-import com.alea.pokemon.adapter.out.pokeapi.dto.PokemonListItem;
-import com.alea.pokemon.adapter.out.pokeapi.dto.PokemonListResponse;
+import com.alea.pokemon.client.dto.PokemonDetailResponse;
+import com.alea.pokemon.client.dto.PokemonListItem;
+import com.alea.pokemon.client.dto.PokemonListResponse;
 import com.alea.pokemon.model.Pokemon;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;

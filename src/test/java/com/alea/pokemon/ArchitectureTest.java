@@ -5,7 +5,9 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleName;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
@@ -39,12 +41,13 @@ class ArchitectureTest {
     static final ArchRule applicationOnlyKnowsTheDomain = classes()
             .that().resideInAPackage("..application..")
             .should().onlyDependOnClassesThat().resideInAnyPackage(
-                    "..application..", "..model..", "..exception..", "..cache..", "java..", "lombok..", "org.slf4j..", "org.springframework.stereotype..");
+                    "..application..", "..model..", "..exception..", "..cache..", "..client..", "java..", "lombok..", "org.slf4j..", "org.springframework.stereotype..");
 
+    // The rest of the application may use ApiClientExecutor, but never PokéAPI's client, DTOs or settings.
     @ArchTest
-    static final ArchRule onlyThePokeApiAdapterKnowsPokeApi = noClasses()
-            .that().resideOutsideOfPackage("..adapter.out.pokeapi..")
-            .should().dependOnClassesThat(resideInAPackage("..adapter.out.pokeapi.."));
+    static final ArchRule onlyTheClientPackageKnowsPokeApi = noClasses()
+            .that().resideOutsideOfPackage("..client..")
+            .should().dependOnClassesThat(resideInAPackage("..client..").and(not(simpleName("ApiClientExecutor"))));
 
     @ArchTest
     static final ArchRule adaptersDoNotKnowEachOther = slices()

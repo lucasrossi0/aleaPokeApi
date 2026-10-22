@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.out.pokeapi;
+package com.alea.pokemon.client;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

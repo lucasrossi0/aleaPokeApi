@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.out.pokeapi;
+package com.alea.pokemon.client;
 
 import com.alea.pokemon.model.Pokemon;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;

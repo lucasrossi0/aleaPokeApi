@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.out.pokeapi.dto;
+package com.alea.pokemon.client.dto;
 
 import com.alea.pokemon.model.Pokemon;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

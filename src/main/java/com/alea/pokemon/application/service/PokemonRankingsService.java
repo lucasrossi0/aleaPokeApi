@@ -3,8 +3,8 @@ package com.alea.pokemon.application.service;
 import com.alea.pokemon.exception.RankingsNotReadyException;
 import com.alea.pokemon.application.port.in.GetPokemonRankingsUseCase;
 import com.alea.pokemon.application.port.in.LoadPokemonRankingsUseCase;
-import com.alea.pokemon.application.port.out.PokemonSourcePort;
 import com.alea.pokemon.cache.RankingsCache;
+import com.alea.pokemon.client.ApiClientExecutor;
 import com.alea.pokemon.model.Pokemon;
 import com.alea.pokemon.model.PokemonRankings;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +18,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PokemonRankingsService implements LoadPokemonRankingsUseCase, GetPokemonRankingsUseCase {
 
-    private final PokemonSourcePort pokemonSource;
+    private final ApiClientExecutor apiClientExecutor;
     private final RankingsCache rankingsCache;
 
     @Override
     public void load() {
         log.info("Loading Pokémon to build the rankings...");
-        List<Pokemon> allPokemon = pokemonSource.fetchAllPokemon();
+        List<Pokemon> allPokemon = apiClientExecutor.fetchAllPokemon();
 
         if (allPokemon.isEmpty()) {
             log.warn("No Pokémon were loaded, the rankings stay unavailable");
