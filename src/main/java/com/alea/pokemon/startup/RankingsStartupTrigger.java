@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.in.startup;
+package com.alea.pokemon.startup;
 
 import com.alea.pokemon.service.PokemonRankingsService;
 import lombok.RequiredArgsConstructor;

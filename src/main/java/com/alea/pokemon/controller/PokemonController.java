@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.in.web;
+package com.alea.pokemon.controller;
 
 import com.alea.pokemon.service.PokemonRankingsService;
 import com.alea.pokemon.model.Pokemon;

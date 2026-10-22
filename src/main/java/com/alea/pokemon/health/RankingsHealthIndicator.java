@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.in.health;
+package com.alea.pokemon.health;
 
 import com.alea.pokemon.service.PokemonRankingsService;
 import lombok.RequiredArgsConstructor;

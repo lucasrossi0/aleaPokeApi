@@ -1,4 +1,4 @@
-package com.alea.pokemon.adapter.in.web;
+package com.alea.pokemon.controller;
 
 import com.alea.pokemon.exception.RankingsNotReadyException;
 import com.alea.pokemon.service.PokemonRankingsService;

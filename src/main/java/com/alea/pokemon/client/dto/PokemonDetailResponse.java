@@ -17,7 +17,7 @@ public record PokemonDetailResponse(
         @JsonProperty("base_experience") Integer baseExperience) {
 
     /**
-     * Converts PokéAPI's shape into our domain object. A missing base experience counts as 0.
+     * Converts PokéAPI's shape into our own Pokemon model. A missing base experience counts as 0.
      */
     public Pokemon toDomain() {
         return Pokemon.builder()

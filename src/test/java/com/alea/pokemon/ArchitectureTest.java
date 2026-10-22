@@ -24,7 +24,7 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule layersFollowTheFlow = layeredArchitecture()
             .consideringOnlyDependenciesInLayers()
-            .layer("EntryPoints").definedBy("com.alea.pokemon.adapter.in..")
+            .layer("EntryPoints").definedBy("com.alea.pokemon.controller..", "com.alea.pokemon.health..", "com.alea.pokemon.startup..")
             .layer("Service").definedBy("com.alea.pokemon.service..")
             .layer("Client").definedBy("com.alea.pokemon.client..")
             .layer("Cache").definedBy("com.alea.pokemon.cache..")
