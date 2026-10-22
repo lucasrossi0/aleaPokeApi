@@ -103,60 +103,52 @@ This runs all tests, generates the coverage report in `target/site/jacoco/index.
 
 | Kind | What | Where |
 |---|---|---|
-| Unit | Ranking rules (order, limit 5, ties, empty) | `domain/PokemonRankingsTest` |
-| Unit (Mockito) | Use case with mocked ports, startup trigger, health indicator, retry/skip/concurrency of the executor | `application/…`, `adapter/in/…`, `ApiClientExecutorTest` |
+| Unit | Ranking rules (order, limit 5, ties, empty) | `model/PokemonRankingsTest` |
+| Unit (Mockito) | Service with a mocked executor and cache, startup trigger, health indicator, retry/skip/concurrency of the executor | `service/…`, `startup/…`, `health/…`, `ApiClientExecutorTest` |
 | HTTP client (WireMock) | Real HTTP calls to a fake PokéAPI: parsing, mapping, `null` base experience, 404/500 | `PokeApiClientTest` |
 | Web layer | JSON, 200 / 503 / 500 / 404 | `PokemonControllerTest` |
-| Architecture (ArchUnit) | The dependency rules below | `ArchitectureTest` |
+| Architecture (ArchUnit) | The layer rules below | `ArchitectureTest` |
 | **Integration** | The whole app against a fake PokéAPI: 503 while loading → 200, exact top-5 results, a Pokémon that fails once (retried) and one that always fails (skipped), PokéAPI is called only at startup, readiness probe | `PokemonRankingsIntegrationTest` |
 
 ---
 
 ## Architecture and decisions
 
-I used **hexagonal architecture** (ports & adapters) so that the code is easy to understand and easy to change. The rule is simple: **dependencies only point inward** — adapters know the application, the application knows the domain, and the domain knows nothing.
+I used the classic **layered MVC structure** of Spring applications. A request goes through the same few layers every time, and each layer only talks to the next one:
 
 ```
 com.alea.pokemon
-├── domain                          Business objects and rules. Plain Java.
-│   ├── Pokemon
-│   └── PokemonRankings             builds the 3 top-5 lists with streams
-│
-├── application                     What the app does. Knows only the domain.
-│   ├── port.in                     What the outside can ask us:  LoadPokemonRankingsUseCase, GetPokemonRankingsUseCase
-│   ├── port.out                    What we need from the outside: PokemonSourcePort, RankingsStorePort
-│   ├── exception
-│   └── service.PokemonRankingsService
-│
-└── adapter                         Connects the application with the real world.
-    ├── in
-    │   ├── web                     REST controller, JSON, error handling
-    │   ├── startup                 starts the loading when the app is ready
-    │   └── health                  actuator health indicator
-    └── out
-        ├── cache                   InMemoryRankingsStore (implements RankingsStorePort)
-        └── pokeapi                 ← the ONLY place that knows PokéAPI
-            ├── PokeApiPokemonSource   implements PokemonSourcePort
-            ├── ApiClientExecutor      virtual threads + concurrency limit + retries
-            ├── PokeApiClient          the HTTP calls
-            └── dto                    PokéAPI JSON shapes
+├── controller   PokemonController (the 3 endpoints), PokemonResponse (the JSON we send)
+├── exception    GlobalExceptionHandler (clean JSON errors), RankingsNotReadyException, PokemonSourceException
+├── service      PokemonRankingsService: builds the rankings once and serves them
+├── model        Pokemon, PokemonRankings (builds the 3 top-5 lists with streams)
+├── cache        RankingsCache: keeps the finished rankings in memory
+├── client       ← the ONLY package that knows PokéAPI
+│   ├── ApiClientExecutor   gets every Pokémon: virtual threads + concurrency limit + retries
+│   ├── PokeApiClient       the HTTP calls
+│   ├── PokeApiProperties / PokeApiConfig   settings and HTTP client
+│   └── dto                 PokéAPI JSON shapes
+├── health       RankingsHealthIndicator (actuator readiness)
+└── startup      RankingsStartupTrigger (starts the loading when the app is ready)
 ```
 
 ```
- startup ─▶ LoadPokemonRankingsUseCase ─▶ PokemonSourcePort ◀── PokeApiPokemonSource ──▶ PokéAPI
-                       │                                                 (virtual threads)
+ startup ──▶ PokemonRankingsService.load() ──▶ ApiClientExecutor ──▶ PokeApiClient ──▶ PokéAPI
+                       │                         (virtual threads)
                        ▼
-                 PokemonRankings.from(list)  ──▶ RankingsStorePort ◀── InMemoryRankingsStore
-                                                                              ▲
- HTTP ─▶ PokemonController ─▶ GetPokemonRankingsUseCase ──────────────────────┘
+              PokemonRankings.from(list) ──▶ RankingsCache
+                                                   ▲
+ HTTP ──▶ PokemonController ──▶ PokemonRankingsService.heaviest() / highest() / mostBaseExperience()
 ```
 
-Why this helps:
+What keeps it tidy:
 
-- **PokéAPI is isolated.** Its URLs, JSON shapes (`base_experience`) and quirks (`null` values) live in one package. If PokéAPI changes, or we want another source (a database, a file), we write one new adapter and nothing else changes.
-- **The cache is swappable.** Today it is a simple `AtomicReference`; moving to Redis means adding one class that implements `RankingsStorePort`.
-- **The domain is easy to read and test**, with no frameworks involved.
-- **It cannot rot silently:** `ArchitectureTest` fails the build if, for example, the domain imports Spring, or any class outside `adapter.out.pokeapi` imports a PokéAPI class.
+- **PokéAPI is isolated.** Its URLs, JSON shapes (`base_experience`) and quirks (`null` values) live in the `client` package. The service only receives our own `Pokemon` objects from `ApiClientExecutor`.
+- **The model is plain Java**, so the ranking rules are easy to read and test without Spring.
+- **The service does not know the web**, and the web does not know PokéAPI.
+- **It cannot rot silently:** `ArchitectureTest` fails the build if a rule is broken, for example if the service uses `PokeApiClient` directly, if any class outside `client` uses a PokéAPI DTO, or if the model imports Spring.
+
+**Why MVC and not ports & adapters (hexagonal)?** I first built this project with hexagonal architecture and then simplified it. For a service with three read-only endpoints, interfaces with a single implementation (a source port, a store port, two use-case interfaces) added indirection and about five extra classes without giving anything the project needs today. The trade-off: swapping PokéAPI for another source, or the cache for Redis, now means introducing an interface at that moment, which is a small change.
 
 ### Decisions
 
@@ -166,11 +158,11 @@ Why this helps:
 | **Virtual threads** (one per Pokémon) | Each call mostly waits for the network; virtual threads make 1351 simultaneous waits cheap, with simple blocking code (no reactive code). |
 | A **concurrency limit** (50 by default) | Being kind to PokéAPI. Configurable. |
 | **Retry 3 times, then skip** the Pokémon and log a warning | One broken Pokémon should not stop the whole service. The trade-off is explained below. |
-| `base_experience` of `null` counts as **0** | PokéAPI has a few forms without a value. Done in the PokéAPI adapter, so the domain never sees `null`. |
+| `base_experience` of `null` counts as **0** | PokéAPI has a few forms without a value. Done in the `client` package, so the model never sees `null`. |
 | **Ties** are broken by name (A→Z) | The result is always the same for the same data. |
 | Hand-written retry loop instead of Spring Retry | Fewer concepts to learn, and easy to test. |
 | In-memory cache without Spring Cache/Caffeine | The data is loaded once and never expires; the simplest thing that works. |
-| Separate `PokemonResponse` for the JSON | The API format can change without touching the domain. |
+| Separate `PokemonResponse` for the JSON | The API format can change without touching the model. |
 | `RestClient` (Spring) with the JDK HTTP client | Blocking calls are fine with virtual threads. |
 | Standard `ProblemDetail` for errors | Same JSON shape for our errors and Spring's. |
 | `wiremock-standalone` | Bundles its own libraries, so it does not clash with Spring Boot 4's Jackson 3. |
@@ -178,7 +170,7 @@ Why this helps:
 ### Things worth knowing about the data
 
 - **All 1351 entries of PokéAPI's `/pokemon` are used**, including alternate forms (`*-mega`, `*-gmax`, `deoxys-attack`...). They are real entries of that API, and the task says "~1300 Pokémon".
-- Because of that, **the heaviest ranking is five Gigantamax forms tied at weight 10000** (there are more than five tied, so the name tie-break decides which five are shown). If you only want "main" Pokémon, that is a one-line filter in the PokéAPI adapter (see improvements).
+- Because of that, **the heaviest ranking is five Gigantamax forms tied at weight 10000** (there are more than five tied, so the name tie-break decides which five are shown). If you only want "main" Pokémon, that is a one-line filter in the `client` package (see improvements).
 - If a Pokémon fails all its attempts it is skipped, so in that rare case the rankings could miss it. It is logged as `WARN Skipping <url> after 3 failed attempts`. In my real run nothing was skipped.
 
 ### How I verified it against the real PokéAPI
