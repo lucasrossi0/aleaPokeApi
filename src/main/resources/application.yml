@@ -2,7 +2,7 @@ spring:
   application:
     name: pokemon-rankings
 
-# Everything we need to talk to PokéAPI. Only the adapter.out.pokeapi package reads these.
+# Everything we need to talk to PokéAPI. Only the client package reads these.
 pokeapi:
   base-url: https://pokeapi.co/api/v2
   connect-timeout: 5s
