@@ -13,11 +13,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
-/**
- * These tests protect the layered (MVC) structure: if someone breaks a rule, the build fails.
- * <p>
- * The flow: controller / health / startup -> service -> client (PokéAPI) and cache. The model is shared.
- */
+
 @AnalyzeClasses(packages = "com.alea.pokemon", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 
@@ -33,7 +29,6 @@ class ArchitectureTest {
             .whereLayer("Client").mayOnlyBeAccessedByLayers("Service")
             .whereLayer("Cache").mayOnlyBeAccessedByLayers("Service");
 
-    // "lombok.." is allowed because Lombok only marks the code it generates; it is not a runtime dependency.
     @ArchTest
     static final ArchRule modelIsPlainJava = classes()
             .that().resideInAPackage("..model..")
@@ -44,7 +39,6 @@ class ArchitectureTest {
             .that().resideInAPackage("..service..")
             .should().dependOnClassesThat().resideInAnyPackage("org.springframework.web..", "jakarta.servlet..");
 
-    // The rest of the application may use ApiClientExecutor, but never PokéAPI's client, DTOs or settings.
     @ArchTest
     static final ArchRule onlyTheClientPackageKnowsPokeApi = noClasses()
             .that().resideOutsideOfPackage("..client..")

@@ -89,8 +89,6 @@ class ApiClientExecutorTest {
 
     @Test
     void fetchAll_whenInterrupted_skipsThePokemon() {
-        // The call is slow, so it is still running when the (already interrupted) test thread waits for it.
-        // lenient: the interrupted executor may stop the task before it reaches the client.
         lenient().when(pokeApiClient.fetchPokemon("url-1")).thenAnswer(invocation -> {
             Thread.sleep(300);
             return pokemon("one");
@@ -98,7 +96,6 @@ class ApiClientExecutorTest {
 
         Thread.currentThread().interrupt();
         List<Pokemon> result = fetchAll(executor(2, 10), List.of("url-1"));
-        // clear the interrupted flag so it does not affect other tests
         boolean wasInterrupted = Thread.interrupted();
 
         assertThat(result).isEmpty();
@@ -115,7 +112,6 @@ class ApiClientExecutorTest {
         verify(pokeApiClient, never()).fetchPokemon(anyString());
     }
 
-    // Gives the executor this list of addresses (as if PokéAPI had listed them) and fetches them all.
     private List<Pokemon> fetchAll(ApiClientExecutor executor, List<String> urls) {
         when(pokeApiClient.listPokemonUrls()).thenReturn(urls);
         return executor.fetchAllPokemon();

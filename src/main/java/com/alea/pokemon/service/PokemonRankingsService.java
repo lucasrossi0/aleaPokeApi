@@ -12,10 +12,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Slf4j
-/**
- * The use case of the application: build the rankings once (from PokéAPI) and then serve them.
- * Every "get" method throws RankingsNotReadyException while the rankings are not loaded yet.
- */
 @Service
 @RequiredArgsConstructor
 public class PokemonRankingsService {

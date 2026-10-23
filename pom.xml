@@ -22,7 +22,6 @@
         <jacoco.version>0.8.15</jacoco.version>
         <wiremock.version>3.13.2</wiremock.version>
         <archunit.version>1.5.1</archunit.version>
-        <!-- Minimum line coverage enforced by "mvn verify" -->
         <coverage.minimum>0.90</coverage.minimum>
     </properties>
 
@@ -41,7 +40,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
@@ -52,7 +50,6 @@
             <artifactId>spring-boot-starter-actuator-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- "standalone" bundles WireMock's own libraries, so it cannot clash with Spring's Jackson -->
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
@@ -74,7 +71,6 @@
 
     <build>
         <plugins>
-            <!-- Since JDK 23, annotation processors (Lombok) must be listed explicitly -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

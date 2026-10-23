@@ -7,11 +7,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-/**
- * Starts loading the rankings as soon as the application is up.
- * The loading runs in its own virtual thread, so the web server is already answering
- * (with 503 Not Ready) while the Pokémon are being fetched.
- */
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -24,7 +20,6 @@ public class RankingsStartupTrigger {
         Thread.ofVirtual().name("rankings-loader").start(this::loadSafely);
     }
 
-    // If loading fails we only log it: the application keeps running and the endpoints keep answering 503.
     void loadSafely() {
         try {
             rankingsService.load();

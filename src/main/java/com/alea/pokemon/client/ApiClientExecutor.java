@@ -14,15 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
-/**
- * Gets every Pokémon from PokéAPI: first the list of all of them, then the details of each one,
- * calling PokéAPI for many Pokémon at the same time so we don't wait for ~1350 calls one by one.
- * This is the only door between PokéAPI and the rest of the application: what comes out are our own Pokémon.
- * <p>
- * - Every Pokémon gets its own virtual thread (cheap threads, perfect for waiting on the network).
- * - A Semaphore limits how many calls run at once, to be kind to PokéAPI.
- * - A call that fails is tried again; if it keeps failing, that Pokémon is skipped.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -31,10 +22,6 @@ public class ApiClientExecutor {
     private final PokeApiClient pokeApiClient;
     private final PokeApiProperties properties;
 
-    /**
-     * @return the Pokémon that could be loaded (the ones that kept failing are left out)
-     * @throws PokemonSourceException if the list of Pokémon itself cannot be obtained
-     */
     public List<Pokemon> fetchAllPokemon() {
         return fetchAll(listUrls());
     }
@@ -50,7 +37,6 @@ public class ApiClientExecutor {
     private List<Pokemon> fetchAll(List<String> urls) {
         Semaphore allowedCalls = new Semaphore(properties.maxConcurrentCalls());
 
-        // The executor is closed at the end of the try block, which waits for every task to finish.
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<Optional<Pokemon>>> futures = urls.stream()
                     .map(url -> executor.submit(() -> fetchLimited(url, allowedCalls)))
@@ -63,7 +49,6 @@ public class ApiClientExecutor {
         }
     }
 
-    // Waits for a free slot, fetches the Pokémon, and gives the slot back.
     private Optional<Pokemon> fetchLimited(String url, Semaphore allowedCalls) {
         try {
             allowedCalls.acquire();
@@ -100,7 +85,6 @@ public class ApiClientExecutor {
             Thread.currentThread().interrupt();
             return Optional.empty();
         } catch (ExecutionException e) {
-            // fetchLimited never throws, but if it ever does we skip that Pokémon instead of failing everything
             log.warn("Unexpected error while loading a Pokémon", e.getCause());
             return Optional.empty();
         }

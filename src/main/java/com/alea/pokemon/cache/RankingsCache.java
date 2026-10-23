@@ -6,10 +6,6 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Keeps the finished rankings in memory, so requests never have to rebuild them.
- * AtomicReference makes it safe to save from the loading thread and read from request threads.
- */
 @Component
 public class RankingsCache {
 

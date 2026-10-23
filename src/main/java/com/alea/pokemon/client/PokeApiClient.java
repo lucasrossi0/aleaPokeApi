@@ -42,6 +42,10 @@ public class PokeApiClient {
                 .retrieve()
                 .body(PokemonDetailResponse.class);
 
+        if (response == null) {
+            throw new IllegalStateException("PokéAPI returned an empty body for " + url);
+        }
+
         return response.toDomain();
     }
 }

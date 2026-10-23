@@ -6,11 +6,6 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-/**
- * Shows in /actuator/health whether the rankings are loaded.
- * It is part of the "readiness" group (see application.yml): until it is UP, the app is not ready for traffic.
- * Spring names this indicator "rankings" (the class name without "HealthIndicator"), as used in application.yml.
- */
 @Component
 @RequiredArgsConstructor
 public class RankingsHealthIndicator implements HealthIndicator {

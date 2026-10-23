@@ -28,15 +28,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Starts the whole application against a fake PokéAPI (WireMock) and checks it end to end:
- * startup loading, retries, skipped Pokémon, the three endpoints, 503 while loading, and readiness.
- * <p>
- * The fake PokéAPI knows 12 Pokémon:
- * - "squirtle" fails once and works on the retry,
- * - "eternatus" always fails, so it must be skipped (it would be #1 in weight and base experience!),
- * - "mystery-form" has base_experience null.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -44,7 +35,6 @@ class PokemonRankingsIntegrationTest {
 
     private static final String LIST_PATH = "/pokemon?limit=100000";
 
-    // Started and stubbed BEFORE the Spring context, because the application calls PokéAPI as soon as it starts.
     private static final WireMockServer pokeApi = startFakePokeApi();
 
     @DynamicPropertySource
@@ -65,7 +55,6 @@ class PokemonRankingsIntegrationTest {
     @Test
     @Order(1)
     void whileLoading_answers503_andWhenLoaded_answers200() throws Exception {
-        // The fake PokéAPI answers the list slowly, so right after startup nothing is loaded yet.
         mockMvc.perform(get("/api/pokemon/heaviest"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.title").value("Not Ready"));
@@ -139,8 +128,6 @@ class PokemonRankingsIntegrationTest {
                 mockMvc.perform(get("/api/pokemon/heaviest")).andExpect(status().isOk()));
     }
 
-    // ---------- fake PokéAPI ----------
-
     private static WireMockServer startFakePokeApi() {
         WireMockServer server = new WireMockServer(options().dynamicPort());
         server.start();
@@ -159,7 +146,6 @@ class PokemonRankingsIntegrationTest {
         stubPokemon(server, 95, "onix", 2100, 88, "77");
         stubPokemon(server, 10001, "mystery-form", 100, 3, "null");
 
-        // squirtle: first call fails (500), the retry works
         server.stubFor(WireMock.get(urlEqualTo("/pokemon/7/"))
                 .inScenario("squirtle").whenScenarioStateIs(Scenario.STARTED)
                 .willReturn(aResponse().withStatus(500))
@@ -168,7 +154,6 @@ class PokemonRankingsIntegrationTest {
                 .inScenario("squirtle").whenScenarioStateIs("second attempt")
                 .willReturn(json(detailBody(7, "squirtle", 90, 5, "63"))));
 
-        // eternatus: always fails
         server.stubFor(WireMock.get(urlEqualTo("/pokemon/890/"))
                 .willReturn(aResponse().withStatus(500)));
 

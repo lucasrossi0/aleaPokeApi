@@ -169,13 +169,9 @@ What keeps it tidy:
 
 ### Things worth knowing about the data
 
-- **All 1351 entries of PokéAPI's `/pokemon` are used**, including alternate forms (`*-mega`, `*-gmax`, `deoxys-attack`...). They are real entries of that API, and the task says "~1300 Pokémon".
+- **All 1351 entries of PokéAPI's `/pokemon` are used**, including alternate forms (`*-mega`, `*-gmax`, `deoxys-attack`...).
 - Because of that, **the heaviest ranking is five Gigantamax forms tied at weight 10000** (there are more than five tied, so the name tie-break decides which five are shown). If you only want "main" Pokémon, that is a one-line filter in the `client` package (see improvements).
 - If a Pokémon fails all its attempts it is skipped, so in that rare case the rankings could miss it. It is logged as `WARN Skipping <url> after 3 failed attempts`. In my real run nothing was skipped.
-
-### How I verified it against the real PokéAPI
-
-I started the app and compared its three answers with an independent script that downloaded all 1351 Pokémon and computed the same top 5s: the results matched exactly.
 
 ---
 
