@@ -112,6 +112,14 @@ This runs all tests, generates the coverage report in `target/site/jacoco/index.
 
 ---
 
+## Bruno collection
+
+The `bruno/` folder is a [Bruno](https://www.usebruno.com/) collection to try the API by hand against a running instance (`http://localhost:8080`). It has one request per endpoint (rankings, health, info) plus a few error cases (unknown path, wrong method, unsupported `Accept`, non-exposed actuator endpoint) that check the expected 404 / 405 / 406 answers.
+
+To use it: start the app, then in Bruno choose **Open Collection** and select the `bruno/` folder. It is not part of the Docker image.
+
+---
+
 ## Architecture and decisions
 
 I used the classic **layered MVC structure** of Spring applications. A request goes through the same few layers every time, and each layer only talks to the next one:
