@@ -20,6 +20,45 @@ Built with **Java 25**, **Spring Boot 4.1**, Maven, Lombok. Tested with JUnit 5,
 
 ---
 
+## Approach and assumptions
+
+**How I read the task.** PokéAPI has no "sort by weight" or "top N" query, so the only way to answer these questions is to read every Pokémon and rank them ourselves. The real design question is *when* to do that work.
+
+| Option | Why I did not choose it |
+|---|---|
+| Fetch everything on every request | ~1350 HTTP calls per request: slow, fragile, and unfriendly to PokéAPI. |
+| Fetch lazily on the first request, then cache | The first user would wait several seconds and a PokéAPI failure would surface as a request error. |
+| **Fetch everything at startup, keep the three top-5 lists in memory** (chosen) | Requests are instant, never depend on PokéAPI being up, and the data (which almost never changes) is read only once. |
+
+**Assumptions I made** (all of them are easy to change):
+
+- **All 1351 entries of `/pokemon` count as Pokémon**, including alternate forms (`*-mega`, `*-gmax`...). I did not filter them because the task does not say to. The side effect is explained in [Things worth knowing about the data](#things-worth-knowing-about-the-data).
+- **A missing `base_experience` counts as 0**, so those Pokémon never reach the top.
+- **Ties are broken by name (A→Z)**, so the same data always gives the same answer.
+- **Answering `503` while loading is my choice**, not something the task asked for. I preferred an honest "not ready yet" over blocking the request or returning a partial ranking.
+- **Units are PokéAPI's own** (`weight` in hectograms, `height` in decimetres); I do not convert them, to avoid hiding the source data.
+
+---
+
+## Production readiness
+
+What is already in place:
+
+- **Health and probes:** `/actuator/health` plus liveness/readiness. Readiness is `UP` only once the rankings are loaded, so an orchestrator will not send traffic to an instance that would answer `503`.
+- **Resilience towards PokéAPI:** connect and read timeouts, 3 attempts per Pokémon with a pause, a concurrency limit, and skip-and-log for a Pokémon that keeps failing instead of failing the whole load.
+- **Predictable errors:** standard `ProblemDetail` JSON for our errors and Spring's own; unexpected errors return a generic 500 without leaking internals, and the cause is only logged.
+- **Configuration without rebuilding:** every `pokeapi.*` property can be overridden with an environment variable.
+- **Container:** multi-stage Docker image, runs as a non-root user.
+- **Quality gates:** the build fails below 90% line coverage, and ArchUnit protects the layer rules.
+
+Known gaps, so nobody has to find them by surprise:
+
+- **If the initial list call fails, the service stays in `503` until it is restarted.** Readiness stays `DOWN`, so it is visible to the platform, but it does not heal by itself.
+- **The data is loaded once.** There is no refresh, so a long-running instance never sees PokéAPI changes.
+- No metrics, no Docker `HEALTHCHECK`, no CI pipeline, and no way to see how many Pokémon were skipped. See the improvements list below.
+
+---
+
 ## Endpoints
 
 | Endpoint | Returns |
@@ -162,7 +201,7 @@ What keeps it tidy:
 
 | Decision | Why |
 |---|---|
-| Load everything **at startup, in the background** | Requests are instant and never depend on PokéAPI being up. The server starts immediately and answers `503` until the data is ready, as requested. |
+| Load everything **at startup, in the background** | Requests are instant and never depend on PokéAPI being up. The server starts immediately and answers `503` until the data is ready (my choice, see assumptions). |
 | **Virtual threads** (one per Pokémon) | Each call mostly waits for the network; virtual threads make 1351 simultaneous waits cheap, with simple blocking code (no reactive code). |
 | A **concurrency limit** (50 by default) | Being kind to PokéAPI. Configurable. |
 | **Retry 3 times, then skip** the Pokémon and log a warning | One broken Pokémon should not stop the whole service. The trade-off is explained below. |
@@ -179,14 +218,14 @@ What keeps it tidy:
 
 - **All 1351 entries of PokéAPI's `/pokemon` are used**, including alternate forms (`*-mega`, `*-gmax`, `deoxys-attack`...).
 - Because of that, **the heaviest ranking is five Gigantamax forms tied at weight 10000** (there are more than five tied, so the name tie-break decides which five are shown). If you only want "main" Pokémon, that is a one-line filter in the `client` package (see improvements).
-- If a Pokémon fails all its attempts it is skipped, so in that rare case the rankings could miss it. It is logged as `WARN Skipping <url> after 3 failed attempts`. In my real run nothing was skipped.
+- If a Pokémon fails all its attempts it is skipped, so in that rare case the rankings could miss it. It is logged as `WARN Skipping <url> after 3 failed attempts`.
 
 ---
 
 ## Improvements I would make with more time
 
 - **Refresh the data** periodically (e.g. `@Scheduled` daily), swapping the cache atomically so there is never a `503` after the first load. PokéAPI data rarely changes, so the current "load once at startup" is acceptable for now.
-- **Retry the initial list call** too (today, if that single call fails, the service stays in `503` and logs an error until restarted), and expose a way to reload.
+- **Retry the initial list call** too (today, if that single call fails, the service stays in `503` and logs an error until restarted), and expose a way to reload. This is the most important production gap.
 - **Make skipped Pokémon visible**: a metric/health detail like "loaded 1349 of 1351", and optionally refuse to become ready below a threshold.
 - **Option to exclude alternate forms** (`/pokemon-species` or `is_default`), possibly via a query parameter such as `?forms=false`.
 - **Metrics and tracing** with Micrometer (load duration, number of retries, skipped Pokémon), structured JSON logs.
@@ -197,3 +236,4 @@ What keeps it tidy:
 - **Build the Docker image in CI** and add a container `HEALTHCHECK`.
 - A **contract test** against the real PokéAPI (run on a schedule, not on every build) to detect upstream changes early.
 - Cache the downloaded data on disk so a restart with PokéAPI down can still serve the last known rankings.
+- Add a **branch coverage** limit to the JaCoCo gate (today only line coverage is enforced).
