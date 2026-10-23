@@ -42,7 +42,7 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule onlyTheClientPackageKnowsPokeApi = noClasses()
             .that().resideOutsideOfPackage("..client..")
-            .should().dependOnClassesThat(resideInAPackage("..client..").and(not(simpleName("ApiClientExecutor"))));
+            .should().dependOnClassesThat(resideInAPackage("..client..").and(not(simpleName("PokemonLoader"))));
 
     @ArchTest
     static final ArchRule noCyclesBetweenPackages = slices()

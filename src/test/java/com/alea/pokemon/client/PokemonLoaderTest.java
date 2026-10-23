@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ApiClientExecutorTest {
+class PokemonLoaderTest {
 
     @Mock
     private PokeApiClient pokeApiClient;
@@ -32,14 +32,14 @@ class ApiClientExecutorTest {
         when(pokeApiClient.fetchPokemon("url-1")).thenReturn(pokemon("one"));
         when(pokeApiClient.fetchPokemon("url-2")).thenReturn(pokemon("two"));
 
-        List<Pokemon> result = fetchAll(executor(3, 10), List.of("url-1", "url-2"));
+        List<Pokemon> result = fetchAll(loader(3, 10), List.of("url-1", "url-2"));
 
         assertThat(result).extracting(Pokemon::getName).containsExactlyInAnyOrder("one", "two");
     }
 
     @Test
     void fetchAll_withNoUrls_returnsEmptyList() {
-        assertThat(fetchAll(executor(3, 10), List.of())).isEmpty();
+        assertThat(fetchAll(loader(3, 10), List.of())).isEmpty();
     }
 
     @Test
@@ -49,7 +49,7 @@ class ApiClientExecutorTest {
                 .thenThrow(new RuntimeException("second attempt fails"))
                 .thenReturn(pokemon("one"));
 
-        List<Pokemon> result = fetchAll(executor(3, 10), List.of("url-1"));
+        List<Pokemon> result = fetchAll(loader(3, 10), List.of("url-1"));
 
         assertThat(result).extracting(Pokemon::getName).containsExactly("one");
         verify(pokeApiClient, times(3)).fetchPokemon("url-1");
@@ -60,7 +60,7 @@ class ApiClientExecutorTest {
         when(pokeApiClient.fetchPokemon("bad-url")).thenThrow(new RuntimeException("always fails"));
         when(pokeApiClient.fetchPokemon("good-url")).thenReturn(pokemon("good"));
 
-        List<Pokemon> result = fetchAll(executor(3, 10), List.of("bad-url", "good-url"));
+        List<Pokemon> result = fetchAll(loader(3, 10), List.of("bad-url", "good-url"));
 
         assertThat(result).extracting(Pokemon::getName).containsExactly("good");
         verify(pokeApiClient, times(3)).fetchPokemon("bad-url");
@@ -81,7 +81,7 @@ class ApiClientExecutorTest {
         });
         List<String> urls = IntStream.range(0, 30).mapToObj(i -> "url-" + i).toList();
 
-        List<Pokemon> result = fetchAll(executor(1, maxConcurrentCalls), urls);
+        List<Pokemon> result = fetchAll(loader(1, maxConcurrentCalls), urls);
 
         assertThat(result).hasSize(30);
         assertThat(mostAtOnce.get()).isBetween(1, maxConcurrentCalls);
@@ -95,7 +95,7 @@ class ApiClientExecutorTest {
         });
 
         Thread.currentThread().interrupt();
-        List<Pokemon> result = fetchAll(executor(2, 10), List.of("url-1"));
+        List<Pokemon> result = fetchAll(loader(2, 10), List.of("url-1"));
         boolean wasInterrupted = Thread.interrupted();
 
         assertThat(result).isEmpty();
@@ -106,22 +106,22 @@ class ApiClientExecutorTest {
     void fetchAllPokemon_whenTheListCallFails_throwsPokemonSourceException() {
         when(pokeApiClient.listPokemonUrls()).thenThrow(new RuntimeException("PokéAPI is down"));
 
-        assertThatThrownBy(() -> executor(3, 10).fetchAllPokemon())
+        assertThatThrownBy(() -> loader(3, 10).fetchAllPokemon())
                 .isInstanceOf(PokemonSourceException.class)
                 .hasCauseInstanceOf(RuntimeException.class);
         verify(pokeApiClient, never()).fetchPokemon(anyString());
     }
 
-    private List<Pokemon> fetchAll(ApiClientExecutor executor, List<String> urls) {
+    private List<Pokemon> fetchAll(PokemonLoader loader, List<String> urls) {
         when(pokeApiClient.listPokemonUrls()).thenReturn(urls);
-        return executor.fetchAllPokemon();
+        return loader.fetchAllPokemon();
     }
 
-    private ApiClientExecutor executor(int maxAttempts, int maxConcurrentCalls) {
+    private PokemonLoader loader(int maxAttempts, int maxConcurrentCalls) {
         PokeApiProperties properties = new PokeApiProperties(
                 "http://not-used", Duration.ofSeconds(1), Duration.ofSeconds(1),
                 maxAttempts, Duration.ZERO, maxConcurrentCalls);
-        return new ApiClientExecutor(pokeApiClient, properties);
+        return new PokemonLoader(pokeApiClient, properties);
     }
 
     private static Pokemon pokemon(String name) {

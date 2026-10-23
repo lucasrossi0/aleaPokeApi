@@ -104,7 +104,7 @@ This runs all tests, generates the coverage report in `target/site/jacoco/index.
 | Kind | What | Where |
 |---|---|---|
 | Unit | Ranking rules (order, limit 5, ties, empty) | `model/PokemonRankingsTest` |
-| Unit (Mockito) | Service with a mocked executor and cache, startup trigger, health indicator, retry/skip/concurrency of the executor | `service/…`, `startup/…`, `health/…`, `ApiClientExecutorTest` |
+| Unit (Mockito) | Service with a mocked loader and cache, startup trigger, health indicator, retry/skip/concurrency of the loader | `service/…`, `startup/…`, `health/…`, `PokemonLoaderTest` |
 | HTTP client (WireMock) | Real HTTP calls to a fake PokéAPI: parsing, mapping, `null` base experience, 404/500 | `PokeApiClientTest` |
 | Web layer | JSON, 200 / 503 / 500 / 404 | `PokemonControllerTest` |
 | Architecture (ArchUnit) | The layer rules below | `ArchitectureTest` |
@@ -114,9 +114,9 @@ This runs all tests, generates the coverage report in `target/site/jacoco/index.
 
 ## Bruno collection
 
-The `bruno/` folder is a [Bruno](https://www.usebruno.com/) collection to try the API by hand against a running instance (`http://localhost:8080`). It has one request per endpoint (rankings, health, info) plus a few error cases (unknown path, wrong method, unsupported `Accept`, non-exposed actuator endpoint) that check the expected 404 / 405 / 406 answers.
+The `bruno/` folder is a [Bruno](https://www.usebruno.com/) collection to check the API against a running instance. It has one request per endpoint (rankings, health, info) plus a few error cases (unknown path, wrong method, unsupported `Accept`, non-exposed actuator endpoint). Every request has assertions on the expected status and body.
 
-To use it: start the app, then in Bruno choose **Open Collection** and select the `bruno/` folder. It is not part of the Docker image.
+To use it: start the app, then in Bruno choose **Open Collection**, select the `bruno/` folder and pick the `local` environment. The address lives in a single `baseUrl` variable (`bruno/environments/local.yml`); to test another instance, add an environment with a different `baseUrl`. With the [Bruno CLI](https://docs.usebruno.com/bru-cli/overview) you can run everything from a terminal: `cd bruno && bru run --env local`. The folder is not part of the Docker image.
 
 ---
 
@@ -132,7 +132,7 @@ com.alea.pokemon
 ├── model        Pokemon, PokemonRankings (builds the 3 top-5 lists with streams)
 ├── cache        RankingsCache: keeps the finished rankings in memory
 ├── client       ← the ONLY package that knows PokéAPI
-│   ├── ApiClientExecutor   gets every Pokémon: virtual threads + concurrency limit + retries
+│   ├── PokemonLoader       gets every Pokémon: virtual threads + concurrency limit + retries
 │   ├── PokeApiClient       the HTTP calls
 │   ├── PokeApiProperties / PokeApiConfig   settings and HTTP client
 │   └── dto                 PokéAPI JSON shapes
@@ -141,7 +141,7 @@ com.alea.pokemon
 ```
 
 ```
- startup ──▶ PokemonRankingsService.load() ──▶ ApiClientExecutor ──▶ PokeApiClient ──▶ PokéAPI
+ startup ──▶ PokemonRankingsService.load() ──▶ PokemonLoader ──▶ PokeApiClient ──▶ PokéAPI
                        │                         (virtual threads)
                        ▼
               PokemonRankings.from(list) ──▶ RankingsCache
@@ -151,7 +151,7 @@ com.alea.pokemon
 
 What keeps it tidy:
 
-- **PokéAPI is isolated.** Its URLs, JSON shapes (`base_experience`) and quirks (`null` values) live in the `client` package. The service only receives our own `Pokemon` objects from `ApiClientExecutor`.
+- **PokéAPI is isolated.** Its URLs, JSON shapes (`base_experience`) and quirks (`null` values) live in the `client` package. The service only receives our own `Pokemon` objects from `PokemonLoader`.
 - **The model is plain Java**, so the ranking rules are easy to read and test without Spring.
 - **The service does not know the web**, and the web does not know PokéAPI.
 - **It cannot rot silently:** `ArchitectureTest` fails the build if a rule is broken, for example if the service uses `PokeApiClient` directly, if any class outside `client` uses a PokéAPI DTO, or if the model imports Spring.

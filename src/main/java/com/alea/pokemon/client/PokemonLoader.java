@@ -17,7 +17,7 @@ import java.util.concurrent.Semaphore;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ApiClientExecutor {
+public class PokemonLoader {
 
     private final PokeApiClient pokeApiClient;
     private final PokeApiProperties properties;
