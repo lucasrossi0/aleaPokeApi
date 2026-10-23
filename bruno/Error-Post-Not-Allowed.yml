@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:8080/api/pokemon/heaviest
+  url: "{{baseUrl}}/api/pokemon/heaviest"
   auth: inherit
 
 runtime:

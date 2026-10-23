@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://localhost:8080/actuator/env
+  url: "{{baseUrl}}/actuator/env"
   auth: inherit
 
 runtime:

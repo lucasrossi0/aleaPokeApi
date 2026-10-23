@@ -5,8 +5,21 @@ info:
 
 http:
   method: GET
-  url: http://localhost:8080/api/pokemon/highest
+  url: "{{baseUrl}}/api/pokemon/highest"
   auth: inherit
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+    - expression: res.body.length
+      operator: eq
+      value: "5"
+    - expression: res.body[0].name
+      operator: isString
+    - expression: res.body[0].height
+      operator: isNumber
 
 settings:
   encodeUrl: true

@@ -5,8 +5,17 @@ info:
 
 http:
   method: GET
-  url: http://localhost:8080/actuator/health
+  url: "{{baseUrl}}/actuator/health"
   auth: inherit
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+    - expression: res.body.status
+      operator: eq
+      value: UP
 
 settings:
   encodeUrl: true
