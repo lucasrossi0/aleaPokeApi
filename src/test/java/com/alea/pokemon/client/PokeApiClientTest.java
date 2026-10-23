@@ -58,6 +58,15 @@ class PokeApiClientTest {
     }
 
     @Test
+    void listPokemonUrls_failsWhenTheBodyIsEmpty() {
+        pokeApi.stubFor(get(urlEqualTo("/pokemon?limit=100000"))
+                .willReturn(aResponse().withStatus(200)));
+
+        assertThatThrownBy(() -> client.listPokemonUrls())
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     void fetchPokemon_mapsTheJsonToADomainPokemon() {
         pokeApi.stubFor(get(urlEqualTo("/pokemon/25/"))
                 .willReturn(aResponse()
